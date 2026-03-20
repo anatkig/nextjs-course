@@ -1,6 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { quickLineChallenges, type QuickLineChallenge } from '../data/quickLines';
+import { course } from '../data';
 import { useProgress } from '../context/ProgressContext';
+
+function getTopicInfo(challenge: QuickLineChallenge) {
+  const mod = course.modules.find(m => m.id === challenge.moduleId);
+  if (!mod) return null;
+  const topic = mod.topics.find(t => t.id === challenge.topicId);
+  return topic ? { moduleTitle: mod.title, topicTitle: topic.title } : null;
+}
 
 function pickRandom(): QuickLineChallenge {
   return quickLineChallenges[Math.floor(Math.random() * quickLineChallenges.length)];
@@ -19,6 +28,8 @@ export function QuickLine({ onClose }: Props) {
   const [streak, setStreak] = useState(0);
   const [showStreakEnd, setShowStreakEnd] = useState(false);
   const [endedStreak, setEndedStreak] = useState(0);
+
+  const topicInfo = useMemo(() => getTopicInfo(challenge), [challenge]);
 
   const next = useCallback(() => {
     setChallenge(pickRandom());
@@ -93,6 +104,11 @@ export function QuickLine({ onClose }: Props) {
             {result === 'correct' && (
               <div className="ql-result correct">
                 <p>✅ Correct!</p>
+                {topicInfo && (
+                  <Link to={`/module/${challenge.moduleId}/topic/${challenge.topicId}`} className="rq-topic-link" onClick={onClose}>
+                    📚 {topicInfo.moduleTitle} → {topicInfo.topicTitle}
+                  </Link>
+                )}
                 <div className="ql-actions">
                   <span className="rq-streak">🔥 Streak: {streak}</span>
                   <button className="btn btn-primary" onClick={next}>Next Quick Line →</button>
@@ -106,6 +122,11 @@ export function QuickLine({ onClose }: Props) {
           <div className="ql-streak-end">
             <p>❌ Not quite. The correct line was:</p>
             <div className="ql-answer-reveal"><code>{challenge.answer}</code></div>
+            {topicInfo && (
+              <Link to={`/module/${challenge.moduleId}/topic/${challenge.topicId}`} className="rq-topic-link" onClick={onClose}>
+                📚 Review: {topicInfo.moduleTitle} → {topicInfo.topicTitle}
+              </Link>
+            )}
             <p className="ql-streak-msg">That was <strong>{endedStreak}</strong> correct answer{endedStreak !== 1 ? 's' : ''} in a row. Keep going!</p>
             <button className="btn btn-primary" onClick={next}>Continue →</button>
           </div>

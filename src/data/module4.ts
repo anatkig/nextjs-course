@@ -3,7 +3,7 @@ import type { Module } from '../types';
 export const module4: Module = {
   id: 'mod-4',
   title: 'Static Site Generation (SSG)',
-  description: 'Pre-render pages at build time for maximum performance: generateStaticParams, revalidation, and ISR.',
+  description: 'Pre-render pages at build time for maximum performance: generateStaticParams, revalidation, and ISR. Learn when to choose static generation over SSR, how to combine both strategies in a single app, and how to manage SEO metadata dynamically.',
   topics: [
     {
       id: 'mod4-t1',
@@ -42,6 +42,7 @@ Pre-render dynamic routes at build time:
 
 \`\`\`tsx
 // app/blog/[slug]/page.tsx
+// Runs at build time to pre-generate all possible route params
 export async function generateStaticParams() {
   const posts = await fetch('https://api.example.com/posts')
     .then(res => res.json());
@@ -122,7 +123,8 @@ ISR lets you serve **static pages** but **update them** after a specified time i
 
 \`\`\`tsx
 // app/products/page.tsx
-export const revalidate = 60; // Revalidate every 60 seconds
+export const // ISR: page is static but regenerates in the background after this interval
+revalidate = 60; // Revalidate every 60 seconds
 
 export default async function Products() {
   const products = await fetch('https://api.example.com/products');

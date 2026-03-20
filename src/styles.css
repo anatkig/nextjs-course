@@ -504,6 +504,14 @@ a:hover { text-decoration: underline; }
 .rq-streak-end { text-align: center; padding: 16px 0; }
 .rq-streak-end p { margin-bottom: 12px; line-height: 1.5; }
 
+.rq-topic-link {
+  display: block; text-align: center; margin: 10px 0; padding: 8px 14px;
+  background: rgba(16,185,129,0.08); border: 1px solid var(--primary);
+  border-radius: var(--radius); color: var(--primary); text-decoration: none;
+  font-size: 0.9rem; transition: background 0.2s;
+}
+.rq-topic-link:hover { background: rgba(16,185,129,0.18); }
+
 .ql-modal { max-width: 650px; }
 .ql-prompt { font-size: 1.1rem; margin-bottom: 16px; padding-right: 24px; line-height: 1.4; }
 

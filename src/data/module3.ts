@@ -3,7 +3,7 @@ import type { Module } from '../types';
 export const module3: Module = {
   id: 'mod-3',
   title: 'Server-Side Rendering (SSR)',
-  description: 'Deep dive into SSR with the App Router: async components, streaming, and request-time data fetching.',
+  description: 'Deep dive into SSR with the App Router: async components, streaming, and request-time data fetching. Understand how Suspense boundaries enable progressive rendering, loading states, and error handling for a smoother user experience.',
   topics: [
     {
       id: 'mod3-t1',
@@ -14,6 +14,7 @@ In the App Router, Server Components can be **async functions** that fetch data 
 
 \`\`\`tsx
 // app/users/page.tsx — this is a Server Component
+// Data fetching runs on the server — result is sent as HTML
 async function getUsers() {
   const res = await fetch('https://api.example.com/users');
   if (!res.ok) throw new Error('Failed to fetch');
@@ -131,7 +132,7 @@ export default async function PostsPage() {
 Create \`loading.tsx\` for automatic Suspense boundaries:
 
 \`\`\`tsx
-// app/dashboard/loading.tsx
+// app/dashboard/loading.tsx — automatically wraps the page in a Suspense boundary
 export default function Loading() {
   return (
     <div className="loading-skeleton">
@@ -303,6 +304,7 @@ Request → Send shell HTML immediately
 \`\`\`tsx
 import { Suspense } from 'react';
 
+// This component loads independently — Suspense shows a fallback while it resolves
 async function SlowData() {
   const data = await fetch('/api/slow-endpoint');
   const json = await data.json();

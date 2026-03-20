@@ -3,7 +3,7 @@ import type { Module } from '../types';
 export const module2: Module = {
   id: 'mod-2',
   title: 'File-Based Routing',
-  description: 'Master Next.js automatic routing: nested routes, dynamic segments, route groups, and parallel routes.',
+  description: 'Master Next.js automatic routing: nested routes, dynamic segments, route groups, and parallel routes. Explore how the file system maps to URLs, how to capture dynamic parameters, and how to organize complex layouts without affecting the URL structure.',
   topics: [
     {
       id: 'mod2-t1',
@@ -38,7 +38,7 @@ app/
 ### Nested Layouts
 
 \`\`\`tsx
-// app/dashboard/layout.tsx
+// app/dashboard/layout.tsx — shared wrapper for all /dashboard/* pages
 export default function DashboardLayout({
   children,
 }: {
@@ -64,7 +64,7 @@ The layout wraps all child pages under \`/dashboard/*\`.
 ### Navigation with \`next/link\`
 
 \`\`\`tsx
-import Link from 'next/link';
+import Link from 'next/link'; // Enables SPA-like navigation without full page reload
 
 function Nav() {
   return (
@@ -152,6 +152,7 @@ interface Props {
   params: { slug: string };
 }
 
+// Dynamic param from URL is passed as props.params
 export default function BlogPost({ params }: Props) {
   return <h1>Post: {params.slug}</h1>;
 }

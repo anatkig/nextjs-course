@@ -3,7 +3,7 @@ import type { Module } from '../types';
 export const module1: Module = {
   id: 'mod-1',
   title: 'Next.js Fundamentals',
-  description: 'Project setup, folder structure, and core concepts that make Next.js different from plain React.',
+  description: 'Project setup, folder structure, and core concepts that make Next.js different from plain React. Learn how the App Router works, understand the rendering strategies (SSR, SSG, ISR, CSR), and grasp the fundamental distinction between Server and Client Components.',
   topics: [
     {
       id: 'mod1-t1',
@@ -28,6 +28,7 @@ Next.js is a **React framework** built by Vercel that adds server-side rendering
 A traditional React SPA sends an **empty HTML shell** to the browser:
 
 \`\`\`html
+<!-- SPA sends an empty shell — nothing visible until JS loads -->
 <div id="root"></div>
 <script src="/bundle.js"></script>
 \`\`\`
@@ -40,10 +41,12 @@ The browser must download, parse, and execute JavaScript before any content appe
 Next.js **pre-renders** pages on the server, sending fully-formed HTML:
 
 \`\`\`html
+<!-- SSR sends fully-formed HTML — content is visible immediately -->
 <div id="root">
   <h1>Welcome to My Site</h1>
   <p>This content is immediately visible!</p>
 </div>
+<!-- JS bundle hydrates the page after the initial render -->
 <script src="/bundle.js"></script>
 \`\`\`
 
@@ -148,9 +151,9 @@ export default function RootLayout({
 \`\`\`js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: true, // Enables stricter checks during development
   images: {
-    domains: ['example.com'],
+    domains: ['example.com'], // Whitelist external image domains for next/image
   },
 };
 
@@ -247,8 +250,9 @@ In Next.js App Router, **all components are Server Components by default**. This
 ### Server Components
 
 \`\`\`tsx
-// This runs ONLY on the server — no "use client" directive
+// This runs ONLY on the server — no "use client" directive needed
 async function ProductList() {
+  // Direct database access — this code never reaches the browser bundle
   const products = await db.query('SELECT * FROM products');
 
   return (
@@ -277,12 +281,12 @@ async function ProductList() {
 Add \`"use client"\` at the top of the file:
 
 \`\`\`tsx
-"use client";
+"use client"; // Required directive to use hooks and event handlers
 
 import { useState } from 'react';
 
 export function Counter() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0); // State lives in the browser
 
   return (
     <button onClick={() => setCount(count + 1)}>
@@ -297,7 +301,7 @@ export function Counter() {
 > A Client Component can only import other Client Components. But a Server Component can render both Server and Client Components.
 
 \`\`\`tsx
-// app/page.tsx (Server Component)
+// app/page.tsx (Server Component) — can render both Server and Client Components
 import { Counter } from './Counter';      // Client Component ✓
 import { ProductList } from './Products'; // Server Component ✓
 

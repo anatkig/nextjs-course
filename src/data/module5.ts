@@ -3,7 +3,7 @@ import type { Module } from '../types';
 export const module5: Module = {
   id: 'mod-5',
   title: 'Data Fetching Patterns',
-  description: 'Master data fetching in Next.js: parallel fetching, sequential fetching, request deduplication, and caching.',
+  description: 'Master data fetching in Next.js: parallel fetching, sequential fetching, request deduplication, and caching. Discover how React cache() and Server Actions streamline server-side logic, reducing client-side complexity and improving performance.',
   topics: [
     {
       id: 'mod5-t1',
@@ -29,6 +29,7 @@ export default async function Page() {
   const userPromise = getUser();
   const postsPromise = getPosts();
 
+  // Both requests fire simultaneously — total wait = slowest request, not sum
   const [user, posts] = await Promise.all([
     userPromise,
     postsPromise,
@@ -140,7 +141,7 @@ Server Actions let you run server-side code from Client or Server Components. Th
 
 \`\`\`tsx
 // app/actions.ts
-"use server";
+"use server"; // This function runs on the server, even when called from client code
 
 export async function createPost(formData: FormData) {
   const title = formData.get('title') as string;
