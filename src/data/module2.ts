@@ -10,7 +10,7 @@ export const module2: Module = {
       title: 'Basic & Nested Routes',
       explanation: `## File-Based Routing
 
-Next.js uses the **file system** to define routes. Each folder in \`app/\` becomes a URL segment.
+Next.js uses the **file system** to define routes. Each folder in \`app/\` becomes a URL segment. Unlike traditional React apps where you manually configure routes with \`react-router\`, here the folder structure **is** the routing configuration. This approach eliminates the need for a centralized route config and makes it immediately clear which URL maps to which component by simply looking at the directory tree.
 
 \`\`\`
 app/
@@ -31,11 +31,13 @@ app/
 
 ### Rules
 
-1. **Only \`page.tsx\` makes a route accessible** — folders without \`page.tsx\` are just organizational
-2. **Layouts cascade** — each segment can have its own \`layout.tsx\`
-3. **Colocation** — you can put components, tests, styles alongside pages
+1. **Only \`page.tsx\` makes a route accessible** — a folder without \`page.tsx\` is just an organizational container and won't respond to HTTP requests
+2. **Layouts cascade** — each segment can have its own \`layout.tsx\` that wraps all child pages, enabling shared UI like navbars and sidebars
+3. **Colocation** — you can put components, tests, styles, and utilities right next to your pages without creating new routes, since only \`page.tsx\` files are publicly accessible
 
 ### Nested Layouts
+
+One of the most powerful features of the App Router is **nested layouts**. Each folder can define its own layout that wraps all child pages within that segment. The layouts compose from top to bottom — the root layout wraps everything, the dashboard layout wraps all dashboard pages, and so on.
 
 \`\`\`tsx
 // app/dashboard/layout.tsx — shared wrapper for all /dashboard/* pages
@@ -59,7 +61,7 @@ export default function DashboardLayout({
 }
 \`\`\`
 
-The layout wraps all child pages under \`/dashboard/*\`.
+The layout wraps all child pages under \`/dashboard/*\`. When the user navigates between \`/dashboard/settings\` and \`/dashboard/analytics\`, only the page content changes — the sidebar remains mounted and its state is preserved.
 
 ### Navigation with \`next/link\`
 
@@ -77,7 +79,7 @@ function Nav() {
 }
 \`\`\`
 
-> \`Link\` automatically prefetches linked pages in production for instant navigation.`,
+> \`Link\` uses client-side navigation by default — it transitions between pages without a full browser reload. In production, visible \`Link\` components are automatically **prefetched**, meaning the target page's data is loaded in the background before the user even clicks, resulting in near-instant navigation.`,
       task: {
         description: 'Create a dashboard layout with a sidebar navigation containing links to /dashboard, /dashboard/settings, and /dashboard/analytics. The layout should wrap children in a flex container.',
         starterCode: `// app/dashboard/layout.tsx
@@ -128,7 +130,7 @@ export default function DashboardLayout({
       title: 'Dynamic Routes & Params',
       explanation: `## Dynamic Route Segments
 
-Use **square brackets** to create dynamic routes:
+Use **square brackets** to create dynamic routes. Dynamic segments allow a single page component to handle many different URLs — for example, a blog post page that renders different content based on the slug in the URL. This is essential for data-driven applications where you don't know all possible routes ahead of time.
 
 \`\`\`
 app/
@@ -146,6 +148,8 @@ app/
 
 ### Accessing Parameters
 
+The dynamic segment value is passed to your component via the \`params\` prop. The key name matches the folder name inside the brackets — \`[slug]\` gives you \`params.slug\`, \`[id]\` gives you \`params.id\`. These are always strings, so you may need to parse them (e.g., \`parseInt(params.id)\` for numeric IDs).
+
 \`\`\`tsx
 // app/blog/[slug]/page.tsx
 interface Props {
@@ -159,6 +163,8 @@ export default function BlogPost({ params }: Props) {
 \`\`\`
 
 ### Catch-All Segments
+
+Using \`...\` (spread syntax) inside brackets creates a **catch-all** segment that matches one or more path segments. The parameter becomes a \`string[]\` instead of a single string. This is ideal for documentation sites, breadcrumb-style navigation, or any URL structure with variable depth.
 
 \`\`\`tsx
 // app/docs/[...slug]/page.tsx
@@ -176,6 +182,8 @@ export default function Docs({ params }: Props) {
 
 ### Optional Catch-All
 
+Double brackets \`[[...slug]]\` make the catch-all **optional**, meaning it also matches the base path itself (e.g., \`/docs\` with \`slug = undefined\`). This is useful when the same component should render both an index page and nested pages.
+
 \`\`\`tsx
 // app/docs/[[...slug]]/page.tsx
 // Also matches /docs (slug = undefined)
@@ -183,7 +191,7 @@ export default function Docs({ params }: Props) {
 
 ### generateStaticParams
 
-Pre-render dynamic routes at build time:
+Pre-render dynamic routes at **build time** for better performance and SEO. \`generateStaticParams\` returns an array of objects describing which parameter values to pre-render. Combined with dynamic segments, it enables full static generation of data-driven pages — the pages are rendered once during the build and served as static HTML.
 
 \`\`\`tsx
 // app/blog/[slug]/page.tsx
@@ -241,7 +249,7 @@ export default function ProductPage({ params }: Props) {
       title: 'Route Groups & Parallel Routes',
       explanation: `## Route Groups
 
-Use **parentheses** to organize routes without affecting the URL:
+Use **parentheses** to organize routes without affecting the URL. Route groups let you logically group pages that share a common layout or purpose — for example, separating your public marketing pages from your authenticated dashboard pages — without introducing extra path segments into your URLs.
 
 \`\`\`
 app/
@@ -256,11 +264,11 @@ app/
 └── page.tsx               # /
 \`\`\`
 
-The parenthesized folder name is **not included in the URL**.
+The parenthesized folder name is **not included in the URL**. This means \`(marketing)/about/page.tsx\` serves \`/about\` — not \`/marketing/about\`. Route groups are purely an organizational tool for developers.
 
 ### Multiple Root Layouts
 
-Route groups can have their own root layouts:
+Route groups can have their own **root layouts**, which means different sections of your site can have completely different HTML structures, head elements, and body classes. This is powerful for apps that have fundamentally different visual designs for different sections (e.g., a landing page vs. an admin panel):
 
 \`\`\`tsx
 // app/(marketing)/layout.tsx
@@ -284,7 +292,7 @@ export default function DashboardLayout({ children }) {
 
 ### Parallel Routes
 
-Render multiple pages simultaneously in the **same layout** using **named slots**:
+Render multiple pages **simultaneously** in the **same layout** using **named slots** (prefixed with \`@\`). Each slot behaves like an independent page that receives its own loading and error states. Parallel routes are ideal for dashboards, split views, or any UI that needs to display multiple independent sections that load and update independently:
 
 \`\`\`
 app/
@@ -326,7 +334,7 @@ export default function Layout({
 
 ### Intercepting Routes
 
-Use \`(.)\`, \`(..)\`, \`(...)\` to intercept navigation:
+Use \`(.)\`, \`(..)\`, \`(...)\` conventions to **intercept** navigation and display a different view (like a modal) while preserving the URL. The convention mirrors relative path syntax: \`(.)\` matches the same level, \`(..)\` matches one level up, and \`(...)\` matches the root. When a user navigates via \`Link\`, the intercepted route renders (e.g., a modal). When they access the URL directly (hard refresh or shared link), the original full page renders instead:
 
 \`\`\`
 app/

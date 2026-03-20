@@ -10,7 +10,7 @@ export const module3: Module = {
       title: 'Async Server Components',
       explanation: `## Server Components Are Async
 
-In the App Router, Server Components can be **async functions** that fetch data directly:
+In the App Router, Server Components can be **async functions** that fetch data directly. This is a fundamental shift from traditional React where you'd use \`useEffect\` + \`useState\` for data fetching — with Server Components, data fetching happens during rendering on the server, before any HTML is sent to the client. No loading spinners, no client-side fetch waterfalls.
 
 \`\`\`tsx
 // app/users/page.tsx — this is a Server Component
@@ -37,43 +37,45 @@ export default async function UsersPage() {
 ### How It Works
 
 1. User requests \`/users\`
-2. Next.js runs the component **on the server**
-3. The \`await\` resolves with data
-4. HTML is generated with the data
-5. HTML is sent to the client
-6. React hydrates for interactivity
+2. Next.js runs the component **on the server** — this means your API keys, database connections, and fetch logic never touch the browser
+3. The \`await\` resolves with data from your API or database
+4. HTML is generated with the actual data already embedded
+5. HTML is sent to the client — the user sees content immediately, not a loading spinner
+6. React hydrates for interactivity (attaching event handlers to the static HTML)
 
 ### Fetch Caching Behavior
 
-Next.js extends \`fetch\` with caching options:
+Next.js extends the native \`fetch\` API with built-in caching and revalidation options. This determines whether a page is statically generated, server-rendered, or incrementally revalidated:
 
 \`\`\`tsx
-// Cached by default (similar to SSG)
+// Cached by default (similar to SSG) — response is stored and reused across requests
 fetch('https://api.example.com/data');
 
-// No cache — fresh data every request (SSR)
+// No cache — fresh data every request (SSR) — always hits the origin server
 fetch('https://api.example.com/data', { cache: 'no-store' });
 
-// Revalidate every 60 seconds (ISR)
+// Revalidate every 60 seconds (ISR) — serves cached version but refreshes in the background
 fetch('https://api.example.com/data', { next: { revalidate: 60 } });
 \`\`\`
 
 ### Dynamic Rendering
 
-Using \`cache: 'no-store'\` or accessing dynamic functions makes a page dynamically rendered:
+Using \`cache: 'no-store'\` or accessing **dynamic functions** makes a page dynamically rendered at request time. Next.js automatically detects when your component uses request-specific data and opts into dynamic rendering:
 
 \`\`\`tsx
 import { cookies, headers } from 'next/headers';
 
 export default async function Page() {
   // Any of these make the page dynamic:
-  const cookieStore = cookies();
-  const headersList = headers();
-  const data = await fetch(url, { cache: 'no-store' });
+  const cookieStore = cookies();   // reads request cookies
+  const headersList = headers();   // reads request headers
+  const data = await fetch(url, { cache: 'no-store' });  // uncached fetch
 
   return <div>Dynamic content</div>;
 }
-\`\`\``,
+\`\`\`
+
+> **Key takeaway:** Async Server Components unify data fetching and rendering into a single step. There's no separation between "fetch data" and "render UI" — the component does both, and the result is pre-rendered HTML sent to the client.`,
       task: {
         description: 'Create a Server Component that fetches a list of posts from a REST API (simulate with an async function). Display each post title and body. Use the no-cache fetch option to ensure fresh data on every request.',
         starterCode: `// app/posts/page.tsx
@@ -129,7 +131,7 @@ export default async function PostsPage() {
       title: 'Loading & Error States',
       explanation: `## Built-in Loading UI
 
-Create \`loading.tsx\` for automatic Suspense boundaries:
+Next.js provides a convention-based approach to loading states. Simply create a \`loading.tsx\` file inside any route segment, and Next.js automatically wraps the corresponding page in a React \`Suspense\` boundary with your loading component as the fallback:
 
 \`\`\`tsx
 // app/dashboard/loading.tsx — automatically wraps the page in a Suspense boundary
@@ -143,7 +145,7 @@ export default function Loading() {
 }
 \`\`\`
 
-This automatically wraps the page in a Suspense boundary:
+This is what Next.js does internally — you don't need to write this yourself:
 
 \`\`\`tsx
 // What Next.js does internally:
@@ -152,12 +154,14 @@ This automatically wraps the page in a Suspense boundary:
 </Suspense>
 \`\`\`
 
+The loading UI appears instantly during navigation while the page's async operations complete. This eliminates the "white flash" problem that occurs when navigating between pages with data fetching.
+
 ### Error Handling
 
-Create \`error.tsx\` for automatic error boundaries:
+Create \`error.tsx\` for automatic error boundaries. This catches any runtime errors thrown by the page or its child components (including failed \`fetch\` calls) and renders a recovery UI instead of crashing the entire app:
 
 \`\`\`tsx
-"use client"; // Error components must be Client Components
+"use client"; // Error components must be Client Components because they use event handlers
 
 export default function Error({
   error,
@@ -176,7 +180,11 @@ export default function Error({
 }
 \`\`\`
 
+> \`reset\` re-renders the route segment, attempting to recover from the error without a full page reload. The \`digest\` property is a hashed identifier useful for matching server-side logs.
+
 ### Not Found
+
+The \`not-found.tsx\` file renders when a resource cannot be found. It's shown either when Next.js detects a 404 or when you explicitly call \`notFound()\`:
 
 \`\`\`tsx
 // app/not-found.tsx
@@ -193,7 +201,7 @@ export default function NotFound() {
 }
 \`\`\`
 
-Trigger it programmatically:
+Trigger it programmatically — useful for dynamic routes where the data doesn't exist:
 
 \`\`\`tsx
 import { notFound } from 'next/navigation';
@@ -211,6 +219,8 @@ export default async function UserPage({ params }) {
 
 ### Hierarchy
 
+Loading and error files follow the same cascading pattern as layouts — closer files override parent files for their segment:
+
 \`\`\`
 app/
 ├── error.tsx         → Catches errors in all child routes
@@ -219,7 +229,9 @@ app/
 │   ├── error.tsx     → Overrides parent error for /dashboard/*
 │   ├── loading.tsx   → Overrides parent loading for /dashboard/*
 │   └── page.tsx
-\`\`\``,
+\`\`\`
+
+> This means you can have a generic loading skeleton for most pages but a custom dashboard-specific skeleton for the dashboard section.`,
       task: {
         description: 'Create a loading.tsx skeleton UI with animated placeholders, and an error.tsx component that shows the error message with a retry button.',
         starterCode: `// app/dashboard/loading.tsx
@@ -282,20 +294,20 @@ export default function Error({
       title: 'Streaming & Suspense',
       explanation: `## Streaming SSR
 
-Instead of waiting for ALL data before sending HTML, streaming sends parts of the page as they become ready.
+Traditional SSR has a bottleneck: the server must finish **all** data fetching before it can send any HTML. If one API call takes 5 seconds, the user stares at a blank page for 5 seconds. Streaming solves this by sending HTML in chunks — the page shell renders immediately, and individual sections stream in as their data becomes available.
 
 ### Without Streaming
 
 \`\`\`
-Request → Wait for ALL data → Send complete HTML → Display
+Request → Wait for ALL data (slowest API wins) → Send complete HTML → Display
 \`\`\`
 
 ### With Streaming
 
 \`\`\`
-Request → Send shell HTML immediately
-        → Stream component 1 when ready
-        → Stream component 2 when ready
+Request → Send shell HTML immediately (header, nav, layout)
+        → Stream component 1 when ready (fast API)
+        → Stream component 2 when ready (slow API)
         → All content displayed progressively
 \`\`\`
 
@@ -356,14 +368,17 @@ export default function Dashboard() {
 }
 \`\`\`
 
-The outer Suspense resolves first (StatsPanel), then the inner one (RevenueChart) streams in. This creates a **progressive loading experience**.
+The outer Suspense resolves first (StatsPanel), then the inner one (RevenueChart) streams in. This creates a **progressive loading experience** where users see the most important data first.
 
 ### Benefits of Streaming
 
-- **Faster TTFB** — shell renders immediately
-- **Progressive rendering** — users see content as it becomes available
-- **No waterfall** — parallel data fetching
-- **Better user experience** — no blank screens`,
+- **Faster TTFB (Time to First Byte)** — the HTML shell renders immediately without waiting for data, so the browser can start parsing and rendering right away
+- **Progressive rendering** — users see content as it becomes available, rather than waiting for the slowest data source
+- **No waterfall** — each Suspense boundary fetches data in parallel, not sequentially
+- **Better user experience** — meaningful content appears quickly with skeleton placeholders for pending sections, eliminating blank screens
+- **SEO friendly** — the streamed content is still real HTML that search engines can index
+
+> **Pro tip:** Place your most critical content outside Suspense boundaries or in the fastest-resolving boundary. Put less critical or slower content in separate Suspense boundaries so it doesn't block the rest of the page.`,
       task: {
         description: 'Build a dashboard page with three async data sections wrapped in their own Suspense boundaries. Each section should have different loading skeletons and simulate different fetch times.',
         starterCode: `// app/dashboard/page.tsx

@@ -10,7 +10,7 @@ export const module4: Module = {
       title: 'Static Rendering & Build-Time Data',
       explanation: `## Static Site Generation
 
-By default, Next.js **statically renders** pages that don't use dynamic functions. The HTML is generated at **build time** and reused on every request.
+By default, Next.js **statically renders** pages that don't use dynamic functions. The HTML is generated at **build time** and reused on every request — served directly from the CDN with no server computation needed. This is the fastest rendering strategy because the response is pre-built and can be cached at the edge globally.
 
 \`\`\`tsx
 // This page is statically rendered by default
@@ -26,19 +26,19 @@ export default async function AboutPage() {
 
 ### Static vs Dynamic Determination
 
-Next.js automatically determines rendering strategy:
+Next.js **automatically determines** the rendering strategy based on what your component does. You don't need to explicitly choose between SSG and SSR — the framework infers it from your code:
 
-| Condition | Strategy |
-|-----------|----------|
-| No dynamic functions used | Static (SSG) |
-| \`cookies()\` or \`headers()\` called | Dynamic (SSR) |
-| \`cache: 'no-store'\` fetch | Dynamic (SSR) |
-| \`searchParams\` accessed | Dynamic (SSR) |
-| \`revalidate: N\` set | ISR |
+| Condition | Strategy | Why |
+|-----------|----------|-----|
+| No dynamic functions used | Static (SSG) | All data known at build time |
+| \`cookies()\` or \`headers()\` called | Dynamic (SSR) | Depends on request-specific data |
+| \`cache: 'no-store'\` fetch | Dynamic (SSR) | Needs fresh data every request |
+| \`searchParams\` accessed | Dynamic (SSR) | URL query string varies per request |
+| \`revalidate: N\` set | ISR | Static but refreshes periodically |
 
 ### generateStaticParams
 
-Pre-render dynamic routes at build time:
+Pre-render **dynamic routes** at build time by telling Next.js which parameter values exist. Without \`generateStaticParams\`, dynamic routes like \`/blog/[slug]\` would be rendered on-demand. With it, Next.js generates all the HTML at build time for the specified parameter values:
 
 \`\`\`tsx
 // app/blog/[slug]/page.tsx
@@ -67,13 +67,13 @@ export default async function Post({ params }: { params: { slug: string } }) {
 
 ### dynamicParams
 
-Control what happens for paths not returned by \`generateStaticParams\`:
+Control what happens when a user visits a path **not returned** by \`generateStaticParams\`. By default, unknown paths trigger on-demand rendering (and the result is cached). Setting it to \`false\` returns a 404 for any unknown path, which is useful for finite content sets like blog posts:
 
 \`\`\`tsx
-// Allow dynamic rendering for unknown slugs
-export const dynamicParams = true; // default
+// Allow dynamic rendering for unknown slugs (default)
+export const dynamicParams = true;
 
-// Return 404 for unknown slugs
+// Return 404 for unknown slugs — only pre-rendered paths are valid
 export const dynamicParams = false;
 \`\`\``,
       task: {
@@ -117,7 +117,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
       title: 'Incremental Static Regeneration (ISR)',
       explanation: `## ISR: Best of SSG + SSR
 
-ISR lets you serve **static pages** but **update them** after a specified time interval.
+ISR lets you serve **static pages** while still keeping them **fresh** by updating them in the background after a specified time interval. Think of it as "SSG with an expiration date" — you get the speed of static pages with the freshness of server-rendered pages, without rebuilding your entire site.
 
 ### Route Segment Config
 
@@ -140,26 +140,31 @@ export default async function Products() {
 
 ### How ISR Works
 
+ISR uses a **stale-while-revalidate** strategy. The key insight is that the user always gets an instant response — regeneration happens asynchronously in the background:
+
 \`\`\`
 1. First request → serve static page (built at build time)
-2. Subsequent requests within revalidate window → serve cached static page
+2. Subsequent requests within revalidate window → serve cached static page (instant)
 3. After revalidate time expires:
-   a. Next request still serves stale page (instant response)
-   b. Background regeneration starts
-   c. Once regeneration succeeds, future requests get the new page
+   a. Next request still serves the stale page (instant response — no waiting)
+   b. Background regeneration starts (server re-renders the page)
+   c. Once regeneration succeeds, the cache is updated
+   d. Future requests get the new page
 \`\`\`
 
 ### Per-Fetch Revalidation
+
+Different data sources on the same page can have **different revalidation intervals**. The page's effective revalidation period is the **shortest interval** among all fetches:
 
 \`\`\`tsx
 export default async function Page() {
   // Each fetch can have its own revalidation
   const products = await fetch('https://api.example.com/products', {
-    next: { revalidate: 3600 }, // 1 hour
+    next: { revalidate: 3600 }, // 1 hour — products change infrequently
   });
 
   const categories = await fetch('https://api.example.com/categories', {
-    next: { revalidate: 86400 }, // 1 day
+    next: { revalidate: 86400 }, // 1 day — categories rarely change
   });
 
   // Page revalidates at the shortest interval (1 hour)
@@ -168,7 +173,7 @@ export default async function Page() {
 
 ### On-Demand Revalidation
 
-Revalidate specific pages programmatically:
+Revalidate specific pages **programmatically** without waiting for the timer. This is essential for CMS webhooks, admin panels, or any event that should immediately update a cached page:
 
 \`\`\`tsx
 // app/api/revalidate/route.ts
@@ -190,6 +195,8 @@ export async function POST(request: Request) {
 \`\`\`
 
 ### Cache Tags
+
+Tags let you group related fetch calls and revalidate them all at once. This is more precise than \`revalidatePath\` — you can invalidate all product data across every page that uses it:
 
 \`\`\`tsx
 // Tag your fetches
@@ -260,9 +267,11 @@ export async function POST(request: NextRequest) {
       title: 'generateMetadata & SEO',
       explanation: `## Dynamic Metadata
 
-Next.js provides a powerful metadata API for SEO:
+Next.js provides a powerful, built-in metadata API for SEO that works seamlessly with both static and dynamic pages. Metadata is defined at the route segment level and supports title templates, Open Graph, Twitter cards, and more.
 
 ### Static Metadata
+
+For pages where the metadata is known at build time, export a \`metadata\` object. Next.js automatically generates the corresponding \`<head>\` tags including \`<title>\`, \`<meta>\`, and Open Graph tags:
 
 \`\`\`tsx
 // app/about/page.tsx
@@ -284,6 +293,8 @@ export default function AboutPage() {
 \`\`\`
 
 ### Dynamic Metadata
+
+For pages where metadata depends on route parameters or fetched data, use the async \`generateMetadata\` function. This function receives the same props as the page component (including \`params\`) and returns a \`Metadata\` object. Next.js automatically deduplicates fetch calls, so fetching the same URL in both \`generateMetadata\` and the page component only results in one actual request:
 
 \`\`\`tsx
 // app/blog/[slug]/page.tsx
@@ -322,7 +333,7 @@ export default async function BlogPost({ params }: Props) {
 
 ### Metadata Inheritance
 
-Child layouts/pages inherit and override parent metadata:
+Child layouts/pages inherit and override parent metadata. The \`template\` feature lets you create consistent title patterns without repeating the site name on every page:
 
 \`\`\`tsx
 // app/layout.tsx
@@ -342,8 +353,10 @@ export const metadata: Metadata = {
 
 ### Sitemap & Robots
 
+Next.js also provides typed APIs for generating \`sitemap.xml\` and \`robots.txt\` files. These help search engines discover and index your pages correctly:
+
 \`\`\`tsx
-// app/sitemap.ts
+// app/sitemap.ts — generates /sitemap.xml
 export default function sitemap() {
   return [
     { url: 'https://example.com', lastModified: new Date() },
@@ -352,7 +365,7 @@ export default function sitemap() {
   ];
 }
 
-// app/robots.ts
+// app/robots.ts — generates /robots.txt
 export default function robots() {
   return {
     rules: { userAgent: '*', allow: '/' },

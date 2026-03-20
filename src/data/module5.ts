@@ -10,7 +10,11 @@ export const module5: Module = {
       title: 'Parallel & Sequential Data Fetching',
       explanation: `## Parallel vs Sequential Fetching
 
+One of the most impactful performance patterns in server-side rendering is how you organize your data fetching calls. Sequential fetching creates a "waterfall" where each request waits for the previous one, while parallel fetching fires all requests simultaneously.
+
 ### Sequential (Waterfall)
+
+In a waterfall pattern, each \`await\` blocks execution until it completes before the next one starts. This is the default behavior when you write async/await code linearly. It's only necessary when one request depends on the result of another (e.g., you need the user ID before fetching their posts):
 
 \`\`\`tsx
 // ❌ Sequential — each await blocks the next
@@ -22,6 +26,8 @@ export default async function Page() {
 \`\`\`
 
 ### Parallel
+
+When requests are independent, use \`Promise.all\` to fire them simultaneously. The total wait time equals the **slowest** single request, not the sum of all requests. This can dramatically improve page load times:
 
 \`\`\`tsx
 // ✅ Parallel — both start simultaneously
@@ -39,6 +45,8 @@ export default async function Page() {
 \`\`\`
 
 ### Preloading Data
+
+You can start fetching data early in a layout or parent component, so that by the time a child component needs it, the result is already cached. React's \`cache()\` ensures the function only executes once per request:
 
 \`\`\`tsx
 import { cache } from 'react';
@@ -59,7 +67,7 @@ export default function Layout({ children }) {
 
 ### Request Deduplication
 
-Next.js automatically deduplicates \`fetch\` calls with the same URL and options during a single render:
+Next.js automatically deduplicates \`fetch\` calls with the same URL and options during a single server render. This means multiple components can independently fetch the same data without worrying about redundant network requests:
 
 \`\`\`tsx
 // Both components call the same URL — only ONE network request is made
@@ -72,7 +80,9 @@ async function Sidebar() {
   const user = await fetch('/api/user').then(r => r.json());
   return <aside>Role: {user.role}</aside>;
 }
-\`\`\``,
+\`\`\`
+
+> **Key insight:** Automatic deduplication means you can fetch data at the component level without prop drilling, and Next.js ensures each unique URL is only requested once.`,
       task: {
         description: 'Refactor a sequential data fetching page to use parallel fetching with Promise.all. The page should fetch user data, posts, and stats simultaneously.',
         starterCode: `// app/dashboard/page.tsx
@@ -137,7 +147,7 @@ export default async function Dashboard() {
       title: 'Server Actions & Mutations',
       explanation: `## Server Actions
 
-Server Actions let you run server-side code from Client or Server Components. They replace API routes for mutations.
+Server Actions let you run server-side code directly from Client or Server Components. They replace the need for manual API routes for data mutations (create, update, delete). Under the hood, Next.js creates a secure endpoint for each Server Action, and the client calls it automatically via a POST request.
 
 \`\`\`tsx
 // app/actions.ts
@@ -157,6 +167,8 @@ export async function createPost(formData: FormData) {
 
 ### Using in a Form
 
+The simplest way to use Server Actions is with the native \`<form>\` element's \`action\` prop. When submitted, Next.js serializes the form data and sends it to the server — no JavaScript is needed on the client for basic form submissions (progressive enhancement):
+
 \`\`\`tsx
 // app/posts/new/page.tsx
 import { createPost } from '../actions';
@@ -173,6 +185,8 @@ export default function NewPost() {
 \`\`\`
 
 ### Using in Client Components
+
+For programmatic invocations (not from a form), use \`useTransition\` to call Server Actions with a pending state. This gives you full control over when the action runs and lets you show loading indicators:
 
 \`\`\`tsx
 "use client";
@@ -194,6 +208,8 @@ export function DeleteButton({ postId }: { postId: string }) {
 \`\`\`
 
 ### useFormState & useFormStatus
+
+For enhanced form UX, \`useFormStatus\` provides pending state information for submit buttons, and \`useFormState\` lets you track the result of form submissions (success/error messages). Note that \`useFormStatus\` must be used in a component **nested inside** the form:
 
 \`\`\`tsx
 "use client";
@@ -297,6 +313,8 @@ export default async function TodosPage() {
       title: 'React Cache & Deduplication',
       explanation: `## React cache() Function
 
+The \`cache()\` function from React memoizes the result of an async function for the duration of a single server request. This means if the same function is called multiple times with the same arguments during one render, it only executes once and returns the cached result for subsequent calls.
+
 Wrap data fetching functions with \`cache()\` to ensure they run only once per request:
 
 \`\`\`tsx
@@ -311,13 +329,14 @@ export const getUser = cache(async (id: string) => {
 
 ### When to Use cache()
 
-- **Non-fetch data access** (database queries, file reads)
-- fetch() is already deduplicated automatically
-- Useful when passing data between components without prop drilling
+- **Non-fetch data access** — database queries, file system reads, or any data source that isn't the native \`fetch\` API
+- fetch() is already deduplicated automatically by Next.js, so wrapping it in \`cache()\` is redundant
+- **Sharing data between components** without prop drilling — multiple components can call the same cached function independently
+- **Preloading** in layouts — start a fetch early so child components get instant results
 
 ### Unstable_cache (Data Cache)
 
-For caching non-fetch data across requests:
+While React \`cache()\` is per-request (cleared after each render), \`unstable_cache\` persists data **across requests** — similar to how \`fetch\` caching works but for non-fetch data sources like direct database queries:
 
 \`\`\`tsx
 import { unstable_cache } from 'next/cache';
@@ -336,23 +355,25 @@ const getCachedUser = unstable_cache(
 
 ### Data Access Patterns
 
+There are multiple valid patterns for fetching data in Server Components. The right choice depends on whether data is shared, how complex the component tree is, and whether you want explicit or implicit data flow:
+
 \`\`\`tsx
 // Pattern 1: Fetch in the component that needs data
-// ✅ Recommended — simple, declarative
+// ✅ Recommended — simple, declarative, components are self-contained
 async function UserProfile({ id }) {
   const user = await getUser(id);
   return <h1>{user.name}</h1>;
 }
 
 // Pattern 2: Fetch in parent, pass as props
-// ✅ Also fine — explicit data dependencies
+// ✅ Also fine — explicit data dependencies, easy to test
 async function Page({ params }) {
   const user = await getUser(params.id);
   return <UserProfile user={user} />;
 }
 
 // Pattern 3: Fetch in layout
-// ⚠️ Use with caution — layouts can't pass data to pages
+// ⚠️ Use with caution — layouts can't pass data to pages directly
 \`\`\``,
       task: {
         description: 'Use the React cache() function to create a cached getUser function, then use it in two different Server Components that render on the same page without duplicating the database call.',

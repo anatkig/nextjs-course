@@ -10,7 +10,11 @@ export const module1: Module = {
       title: 'What is Next.js & Why Use It',
       explanation: `## What is Next.js?
 
-Next.js is a **React framework** built by Vercel that adds server-side rendering, static site generation, file-based routing, and many production-grade features on top of React.
+Next.js is a **React framework** built by Vercel that adds server-side rendering, static site generation, file-based routing, and many production-grade features on top of React. While React itself is a UI library focused on building component trees, Next.js adds the full infrastructure needed for production: routing, data fetching, rendering optimization, and deployment tooling.
+
+### Why Not Just Use React?
+
+With plain React (e.g., Create React App or Vite), you get a **client-side single-page application (SPA)**. The browser receives an empty HTML shell plus a JavaScript bundle. This approach works well for highly interactive dashboards or authenticated apps, but it has major drawbacks for SEO, initial load performance, and content accessibility. Next.js solves these issues by letting you choose the best rendering strategy per page.
 
 ### React vs Next.js
 
@@ -20,8 +24,9 @@ Next.js is a **React framework** built by Vercel that adds server-side rendering
 | Routing | Manual (react-router) | File-based (automatic) |
 | SEO | Poor (empty HTML) | Excellent (pre-rendered) |
 | API Routes | Separate backend | Built-in API routes |
-| Code Splitting | Manual | Automatic |
+| Code Splitting | Manual | Automatic per-route |
 | Image Optimization | Manual | Built-in \`next/image\` |
+| Font Optimization | Manual | Built-in \`next/font\` |
 
 ### How SSR Solves the SPA Problem
 
@@ -34,9 +39,10 @@ A traditional React SPA sends an **empty HTML shell** to the browser:
 \`\`\`
 
 The browser must download, parse, and execute JavaScript before any content appears. This causes:
-- **Poor SEO** — search engines see an empty page
-- **Slow First Contentful Paint** — users see a blank screen
-- **No content without JavaScript**
+- **Poor SEO** — search engine crawlers see an empty page and index nothing meaningful
+- **Slow First Contentful Paint (FCP)** — users stare at a blank screen while JS downloads
+- **No content without JavaScript** — if the script fails or is blocked, the page is empty
+- **Slow Time to Interactive (TTI)** — large bundles take longer to parse and execute
 
 Next.js **pre-renders** pages on the server, sending fully-formed HTML:
 
@@ -50,27 +56,38 @@ Next.js **pre-renders** pages on the server, sending fully-formed HTML:
 <script src="/bundle.js"></script>
 \`\`\`
 
+After the HTML is displayed, React **hydrates** the page — it attaches event handlers and makes the page fully interactive. The user sees content immediately while React wires up interactivity in the background.
+
 ### Rendering Strategies
+
+Next.js lets you pick different rendering strategies depending on your page's data requirements:
 
 \`\`\`
 SSR (Server-Side Rendering)
   → HTML generated on EVERY request
   → Always fresh data
-  → Slower TTFB
+  → Slower TTFB due to server computation
+  → Best for: user-specific content, real-time dashboards
 
 SSG (Static Site Generation)
   → HTML generated at BUILD time
-  → Fastest possible response
-  → Data can become stale
+  → Fastest possible response (served from CDN)
+  → Data can become stale between builds
+  → Best for: blogs, marketing pages, documentation
 
 ISR (Incremental Static Regeneration)
-  → SSG + revalidation after N seconds
-  → Best of both worlds
+  → SSG + background revalidation after N seconds
+  → Combines speed of static with freshness of dynamic
+  → Stale page served while new one generates in background
+  → Best for: e-commerce product pages, news feeds
 
 CSR (Client-Side Rendering)
-  → Traditional React behavior
-  → Good for authenticated/dynamic content
-\`\`\``,
+  → Traditional React behavior — rendering happens in the browser
+  → Good for authenticated/dynamic content behind a login
+  → Best for: admin panels, interactive tools
+\`\`\`
+
+You can mix and match these strategies within the same application — for example, using SSG for your homepage, SSR for a user profile, and CSR for a settings dashboard.`,
       task: {
         description: 'Create a simple Next.js page component that would be placed at `app/page.tsx`. It should render an h1 with "Welcome to Next.js", a paragraph explaining SSR benefits, and a list of 3 rendering strategies.',
         starterCode: `// app/page.tsx
@@ -110,6 +127,8 @@ export default function HomePage() {
       title: 'Project Structure & Configuration',
       explanation: `## Next.js Project Structure (App Router)
 
+When you create a new Next.js project with \`npx create-next-app@latest\`, you get the **App Router** layout by default (introduced in Next.js 13.4). The App Router uses the \`app/\` directory and is built around React Server Components. Here is a typical project layout:
+
 \`\`\`
 my-app/
 ├── app/
@@ -121,16 +140,18 @@ my-app/
 │   └── blog/
 │       ├── page.tsx       # /blog
 │       └── [slug]/
-│           └── page.tsx   # /blog/:slug
-├── public/                # Static assets
+│           └── page.tsx   # /blog/:slug (dynamic route)
+├── public/                # Static assets (images, fonts, favicon)
 ├── next.config.js         # Next.js configuration
 ├── package.json
 └── tsconfig.json
 \`\`\`
 
+The routing is entirely **file-system based** — every folder inside \`app/\` that contains a \`page.tsx\` becomes a URL route automatically. There's no need for a router configuration file.
+
 ### Key Files
 
-**\`app/layout.tsx\`** — The root layout wraps every page:
+**\`app/layout.tsx\`** — The root layout wraps every page. It must return \`<html>\` and \`<body>\` tags. Layouts persist across navigations — their state and React tree are preserved when the user navigates between child pages:
 
 \`\`\`tsx
 export default function RootLayout({
@@ -146,7 +167,7 @@ export default function RootLayout({
 }
 \`\`\`
 
-**\`next.config.js\`** — Configuration file:
+**\`next.config.js\`** — The central configuration file for your Next.js project. It controls image domains, redirects, headers, environment variables, and much more:
 
 \`\`\`js
 /** @type {import('next').NextConfig} */
@@ -162,20 +183,25 @@ module.exports = nextConfig;
 
 ### Special Files in the App Router
 
+The App Router recognizes a set of **convention-based file names** inside each route folder. Each filename has a specific purpose and is handled automatically by Next.js:
+
 | File | Purpose |
 |------|---------|
-| \`page.tsx\` | The UI for a route |
-| \`layout.tsx\` | Shared layout that wraps children |
-| \`loading.tsx\` | Loading UI (Suspense boundary) |
-| \`error.tsx\` | Error UI (Error boundary) |
-| \`not-found.tsx\` | 404 UI |
-| \`template.tsx\` | Like layout but re-mounts on navigation |
-| \`route.ts\` | API endpoint |
+| \`page.tsx\` | The UI for a route — only pages make routes publicly accessible |
+| \`layout.tsx\` | Shared layout that wraps children — persists across navigations |
+| \`loading.tsx\` | Loading UI — creates an automatic Suspense boundary |
+| \`error.tsx\` | Error UI — creates an automatic Error boundary |
+| \`not-found.tsx\` | 404 UI — shown when \`notFound()\` is called |
+| \`template.tsx\` | Like layout but re-mounts on every navigation (state resets) |
+| \`route.ts\` | API endpoint (cannot coexist with \`page.tsx\` in the same folder) |
+| \`default.tsx\` | Fallback UI for parallel route slots when no match is found |
 
 ### Layout vs Template
 
-- **Layout**: Persists across navigations, state is preserved
-- **Template**: Re-creates on every navigation, state resets
+This is a common point of confusion. Both wrap child content, but they behave differently during navigation:
+
+- **Layout**: Persists across navigations — state is preserved, component does not re-mount. This is ideal for navigation bars, sidebars, and any UI that should stay consistent.
+- **Template**: Re-creates the component instance on every navigation — state resets. This is useful for entrance animations, per-page analytics logging, or when you need a fresh component on each visit.
 
 \`\`\`tsx
 // app/dashboard/layout.tsx — state persists
@@ -192,7 +218,9 @@ export default function DashboardLayout({ children }) {
 export default function DashboardTemplate({ children }) {
   return <div className="fade-in">{children}</div>;
 }
-\`\`\``,
+\`\`\`
+
+In practice, you'll use \`layout.tsx\` 95% of the time. Templates are only needed when you specifically want a fresh instance per navigation.`,
       task: {
         description: 'Create a root layout component (`app/layout.tsx`) that includes an HTML structure with a header containing navigation links (Home, About, Blog), a main area for children, and a footer.',
         starterCode: `// app/layout.tsx
@@ -245,7 +273,11 @@ export default function RootLayout({
       title: 'Server Components vs Client Components',
       explanation: `## React Server Components (RSC)
 
-In Next.js App Router, **all components are Server Components by default**. This is a fundamental shift from traditional React.
+In Next.js App Router, **all components are Server Components by default**. This is a fundamental shift from traditional React, where every component runs in the browser. Server Components run exclusively on the server — their code is never sent to the client, which means they contribute zero bytes to your JavaScript bundle.
+
+### Why Server Components Matter
+
+Before RSC, all React code was shipped to the browser. If you imported a heavy markdown parser or a date library, it would all end up in the client bundle. With Server Components, heavy dependencies stay on the server. Only the rendered HTML output is sent to the client.
 
 ### Server Components
 
@@ -266,19 +298,21 @@ async function ProductList() {
 \`\`\`
 
 **Benefits:**
-- Direct database/filesystem access
-- Zero bundle size (code stays on server)
-- Automatic code splitting
-- Can use \`async/await\` directly
+- Direct database/filesystem access — no API layer needed
+- Zero bundle size impact — all code stays on the server
+- Automatic code splitting — each component is split by default
+- Can use \`async/await\` directly in the component body
+- Sensitive data (API keys, tokens) never leave the server
 
 **Limitations:**
-- No \`useState\`, \`useEffect\`, or other hooks
-- No browser APIs (\`window\`, \`document\`)
-- No event handlers (\`onClick\`, \`onChange\`)
+- No \`useState\`, \`useEffect\`, or other React hooks
+- No browser APIs (\`window\`, \`document\`, \`localStorage\`)
+- No event handlers (\`onClick\`, \`onChange\`, \`onSubmit\`)
+- Cannot use React Context (it requires client-side rendering)
 
 ### Client Components
 
-Add \`"use client"\` at the top of the file:
+When you need interactivity — forms, buttons, animations, real-time updates — you opt in by adding \`"use client"\` at the top of the file. This tells Next.js to include the component in the client JavaScript bundle:
 
 \`\`\`tsx
 "use client"; // Required directive to use hooks and event handlers
@@ -296,9 +330,15 @@ export function Counter() {
 }
 \`\`\`
 
+Client Components are still **pre-rendered** on the server for the initial HTML (so they're still SEO-friendly), but they're also **hydrated** on the client so that event handlers and state work correctly.
+
 ### The Boundary Rule
 
+This is one of the most important rules in the App Router:
+
 > A Client Component can only import other Client Components. But a Server Component can render both Server and Client Components.
+
+Once you mark a file with \`"use client"\`, everything it imports also becomes part of the client bundle. This is why you should push the \`"use client"\` boundary as deep in the component tree as possible — keep most of your app as Server Components and only wrap the specific interactive pieces with \`"use client"\`.
 
 \`\`\`tsx
 // app/page.tsx (Server Component) — can render both Server and Client Components
@@ -308,8 +348,8 @@ import { ProductList } from './Products'; // Server Component ✓
 export default function Page() {
   return (
     <div>
-      <ProductList />   {/* Server: fetches data */}
-      <Counter />       {/* Client: handles interaction */}
+      <ProductList />   {/* Server: fetches data, zero bundle cost */}
+      <Counter />       {/* Client: handles user interaction */}
     </div>
   );
 }
@@ -319,11 +359,14 @@ export default function Page() {
 
 | Use Server Component | Use Client Component |
 |---------------------|---------------------|
-| Fetch data | Interactive UI (forms, buttons) |
-| Access backend resources | useState / useEffect |
-| Keep sensitive data on server | Browser APIs |
-| Reduce client bundle | Event listeners |
-| Heavy dependencies | Real-time updates |`,
+| Fetch data from DB/API | Interactive UI (forms, buttons) |
+| Access backend resources directly | useState / useEffect / useRef |
+| Keep sensitive data on server | Browser APIs (localStorage, geolocation) |
+| Reduce client bundle size | Event listeners (onClick, onChange) |
+| Use heavy dependencies (markdown, etc.) | Real-time updates (WebSockets) |
+| Render static or async content | Animations and transitions |
+
+**Rule of thumb:** start with Server Components everywhere. Only add \`"use client"\` when you specifically need interactivity, hooks, or browser APIs.`,
       task: {
         description: 'Create a page that uses both a Server Component (to display a list of items fetched from an async function) and a Client Component (an interactive search filter with useState).',
         starterCode: `// components/SearchFilter.tsx
