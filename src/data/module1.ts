@@ -88,7 +88,7 @@ CSR (Client-Side Rendering)
 \`\`\`
 
 You can mix and match these strategies within the same application — for example, using SSG for your homepage, SSR for a user profile, and CSR for a settings dashboard.`,
-      task: {
+      tasks: [{
         description: 'Create a simple Next.js page component that would be placed at `app/page.tsx`. It should render an h1 with "Welcome to Next.js", a paragraph explaining SSR benefits, and a list of 3 rendering strategies.',
         starterCode: `// app/page.tsx
 export default function HomePage() {
@@ -120,7 +120,7 @@ export default function HomePage() {
           'In the App Router, pages go in app/page.tsx',
           'No special imports needed for a basic server component',
         ],
-      },
+      }],
     },
     {
       id: 'mod1-t2',
@@ -221,7 +221,7 @@ export default function DashboardTemplate({ children }) {
 \`\`\`
 
 In practice, you'll use \`layout.tsx\` 95% of the time. Templates are only needed when you specifically want a fresh instance per navigation.`,
-      task: {
+      tasks: [{
         description: 'Create a root layout component (`app/layout.tsx`) that includes an HTML structure with a header containing navigation links (Home, About, Blog), a main area for children, and a footer.',
         starterCode: `// app/layout.tsx
 export default function RootLayout({
@@ -266,7 +266,7 @@ export default function RootLayout({
           'The layout must return <html> and <body> tags',
           'children prop contains the page content',
         ],
-      },
+      }],
     },
     {
       id: 'mod1-t3',
@@ -367,7 +367,7 @@ export default function Page() {
 | Render static or async content | Animations and transitions |
 
 **Rule of thumb:** start with Server Components everywhere. Only add \`"use client"\` when you specifically need interactivity, hooks, or browser APIs.`,
-      task: {
+      tasks: [{
         description: 'Create a page that uses both a Server Component (to display a list of items fetched from an async function) and a Client Component (an interactive search filter with useState).',
         starterCode: `// components/SearchFilter.tsx
 // TODO: Make this a Client Component with useState
@@ -434,7 +434,7 @@ export default async function Page() {
           'Server Components can be async functions',
           'Pass data from Server to Client Components via props',
         ],
-      },
+      }],
     },
   ],
   test: [

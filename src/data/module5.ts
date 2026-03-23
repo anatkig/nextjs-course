@@ -83,7 +83,7 @@ async function Sidebar() {
 \`\`\`
 
 > **Key insight:** Automatic deduplication means you can fetch data at the component level without prop drilling, and Next.js ensures each unique URL is only requested once.`,
-      task: {
+      tasks: [{
         description: 'Refactor a sequential data fetching page to use parallel fetching with Promise.all. The page should fetch user data, posts, and stats simultaneously.',
         starterCode: `// app/dashboard/page.tsx
 async function getUser() {
@@ -140,7 +140,7 @@ export default async function Dashboard() {
           'Destructure the result array to get each value',
           'This reduces total wait time to the slowest request',
         ],
-      },
+      }],
     },
     {
       id: 'mod5-t2',
@@ -237,7 +237,7 @@ export function ContactForm() {
   );
 }
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Create a Server Action for adding a todo item and a form component that uses it with useFormStatus for a pending state indicator.',
         starterCode: `// app/actions.ts
 "use server";
@@ -306,7 +306,7 @@ export default async function TodosPage() {
           'useFormStatus must be in a component INSIDE the form',
           'Use revalidatePath to refresh page data after mutation',
         ],
-      },
+      }],
     },
     {
       id: 'mod5-t3',
@@ -375,7 +375,7 @@ async function Page({ params }) {
 // Pattern 3: Fetch in layout
 // ⚠️ Use with caution — layouts can't pass data to pages directly
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Use the React cache() function to create a cached getUser function, then use it in two different Server Components that render on the same page without duplicating the database call.',
         starterCode: `// lib/data.ts
 // TODO: Create a cached getUser function using React cache()
@@ -421,7 +421,7 @@ export async function UserSidebar({ userId }: { userId: string }) {
           'cache() returns a memoized version of the function',
           'The cached result is per-request — cleared between requests',
         ],
-      },
+      }],
     },
   ],
   test: [

@@ -9,7 +9,7 @@ export interface Topic {
   id: string;
   title: string;
   explanation: string;
-  task: Task;
+  tasks: Task[];
 }
 
 export interface QuizQuestion {
@@ -37,7 +37,7 @@ export interface Course {
 
 export interface TopicProgress {
   completed: boolean;
-  taskCompleted: boolean;
+  tasksCompleted: boolean[];
 }
 
 export interface TestResult {

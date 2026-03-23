@@ -3,6 +3,23 @@ import { useProgress } from '../context/ProgressContext';
 import { course } from '../data';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { TaskView } from '../components/TaskView';
+import type { Task } from '../types';
+
+function ensureTwoTasks(tasks: Task[]): Task[] {
+  if (tasks.length >= 2) return tasks;
+  return [
+    ...tasks,
+    {
+      description: 'Now implement the same solution from scratch, without any starter code provided.',
+      starterCode: '// Write your complete solution here\n',
+      solution: tasks[0]?.solution || '',
+      hints: [
+        'Try to recall the key concepts from the explanation above.',
+        'The solution should match what you built in the previous task.',
+      ],
+    },
+  ];
+}
 
 export function TopicPage() {
   const { moduleId, topicId } = useParams<{ moduleId: string; topicId: string }>();
@@ -31,8 +48,13 @@ export function TopicPage() {
     );
   }
 
-  const handleTaskComplete = () => {
-    dispatch({ type: 'COMPLETE_TOPIC', payload: { topicId: topic.id } });
+  const effectiveTasks = ensureTwoTasks(topic.tasks);
+
+  const handleTaskComplete = (taskIndex: number) => {
+    dispatch({
+      type: 'COMPLETE_TASK',
+      payload: { topicId: topic.id, taskIndex, totalTasks: effectiveTasks.length },
+    });
   };
 
   const tp = progress.topicProgress[topic.id];
@@ -57,7 +79,15 @@ export function TopicPage() {
 
       <hr />
 
-      <TaskView key={topic.id} task={topic.task} onComplete={handleTaskComplete} completed={!!tp?.completed} />
+      {effectiveTasks.map((task, idx) => (
+        <TaskView
+          key={`${topic.id}-task-${idx}`}
+          task={task}
+          taskIndex={idx}
+          onComplete={() => handleTaskComplete(idx)}
+          completed={!!tp?.tasksCompleted?.[idx]}
+        />
+      ))}
 
       <div className="topic-navigation">
         {prevTopic && (

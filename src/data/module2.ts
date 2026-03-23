@@ -80,7 +80,7 @@ function Nav() {
 \`\`\`
 
 > \`Link\` uses client-side navigation by default — it transitions between pages without a full browser reload. In production, visible \`Link\` components are automatically **prefetched**, meaning the target page's data is loaded in the background before the user even clicks, resulting in near-instant navigation.`,
-      task: {
+      tasks: [{
         description: 'Create a dashboard layout with a sidebar navigation containing links to /dashboard, /dashboard/settings, and /dashboard/analytics. The layout should wrap children in a flex container.',
         starterCode: `// app/dashboard/layout.tsx
 import Link from 'next/link';
@@ -123,7 +123,7 @@ export default function DashboardLayout({
           'The layout receives children as a prop',
           'Layouts persist across child page navigations',
         ],
-      },
+      }],
     },
     {
       id: 'mod2-t2',
@@ -206,7 +206,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
   return <h1>{params.slug}</h1>;
 }
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Create a dynamic product page at `app/products/[id]/page.tsx` that displays the product ID from params and a "Back to Products" link. Also implement `generateStaticParams` to pre-render products with IDs 1-5.',
         starterCode: `// app/products/[id]/page.tsx
 
@@ -242,7 +242,7 @@ export default function ProductPage({ params }: Props) {
           'generateStaticParams returns an array of param objects',
           'Each param object should match the dynamic segment name',
         ],
-      },
+      }],
     },
     {
       id: 'mod2-t3',
@@ -346,7 +346,7 @@ app/
     └── (..)photo/[id]/
         └── page.tsx       # Modal view when navigating from feed
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Create a route group structure with (marketing) and (app) groups. The marketing group should have its own layout with a public navbar, and the app group should have a layout with an authenticated sidebar.',
         starterCode: `// app/(marketing)/layout.tsx
 // TODO: Create marketing layout with public navbar
@@ -402,7 +402,7 @@ export default function AppLayout({
           'The group name does not appear in the URL',
           'Each group can have its own layout.tsx',
         ],
-      },
+      }],
     },
   ],
   test: [

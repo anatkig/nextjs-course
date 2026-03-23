@@ -76,7 +76,7 @@ export const dynamicParams = true;
 // Return 404 for unknown slugs — only pre-rendered paths are valid
 export const dynamicParams = false;
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Create a statically generated blog page with generateStaticParams. Define 3 blog posts and pre-render their pages. Set dynamicParams to false so unknown slugs return 404.',
         starterCode: `// app/blog/[slug]/page.tsx
 // TODO: Set dynamicParams to false
@@ -110,7 +110,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
           'Set dynamicParams = false to 404 on unknown slugs',
           'Each param object should have the same keys as the dynamic segment',
         ],
-      },
+      }],
     },
     {
       id: 'mod4-t2',
@@ -207,7 +207,7 @@ const products = await fetch('https://api.example.com/products', {
 // Later, revalidate all fetches tagged 'products'
 revalidateTag('products');
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Create a products page with ISR that revalidates every 5 minutes. Also create an API route that can trigger on-demand revalidation using revalidateTag.',
         starterCode: `// app/products/page.tsx
 // TODO: Set revalidate to 300 (5 minutes)
@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
           'Use next: { tags: [...] } in fetch options for cache tagging',
           'revalidateTag() purges all fetches with that tag',
         ],
-      },
+      }],
     },
     {
       id: 'mod4-t3',
@@ -373,7 +373,7 @@ export default function robots() {
   };
 }
 \`\`\``,
-      task: {
+      tasks: [{
         description: 'Create a dynamic blog post page with generateMetadata that sets the title, description, and Open Graph tags based on the fetched post data.',
         starterCode: `// app/blog/[slug]/page.tsx
 import type { Metadata } from 'next';
@@ -427,7 +427,7 @@ export default async function BlogPost({ params }: Props) {
           'Next.js deduplicates fetch calls — the same URL is only fetched once',
           'Return a Metadata object matching the Next.js Metadata type',
         ],
-      },
+      }],
     },
   ],
   test: [

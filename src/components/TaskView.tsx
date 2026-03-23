@@ -4,24 +4,34 @@ import { CodeBlock } from './CodeBlock';
 
 interface TaskViewProps {
   task: Task;
+  taskIndex: number;
   onComplete: () => void;
   completed?: boolean;
 }
 
-export function TaskView({ task, onComplete, completed: alreadyCompleted }: TaskViewProps) {
+function normalizeCode(code: string): string {
+  return code.replace(/\s+/g, '');
+}
+
+export function TaskView({ task, taskIndex, onComplete, completed: alreadyCompleted }: TaskViewProps) {
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [userCode, setUserCode] = useState(task.starterCode);
   const [completed, setCompleted] = useState(!!alreadyCompleted);
+  const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
 
-  const handleComplete = () => {
-    setCompleted(true);
-    onComplete();
+  const handleCheck = () => {
+    const isCorrect = normalizeCode(userCode) === normalizeCode(task.solution);
+    setFeedback(isCorrect ? 'correct' : 'incorrect');
+    if (isCorrect && !completed) {
+      setCompleted(true);
+      onComplete();
+    }
   };
 
   return (
-    <div className="task-view">
-      <h3>📝 Practice Task</h3>
+    <div className={`task-view ${completed ? 'task-solved' : ''}`}>
+      <h3>📝 Task {taskIndex + 1}</h3>
       <p className="task-description">{task.description}</p>
 
       <div className="task-code">
@@ -29,25 +39,29 @@ export function TaskView({ task, onComplete, completed: alreadyCompleted }: Task
         <textarea
           className="code-editor"
           value={userCode}
-          onChange={(e) => setUserCode(e.target.value)}
+          onChange={(e) => { setUserCode(e.target.value); setFeedback(null); }}
           rows={userCode.split('\n').length + 2}
           spellCheck={false}
         />
       </div>
 
+      {feedback === 'correct' && (
+        <div className="task-feedback correct">✅ Correct! Well done.</div>
+      )}
+      {feedback === 'incorrect' && (
+        <div className="task-feedback incorrect">❌ Not quite right. Check your code and try again.</div>
+      )}
+
       <div className="task-actions">
+        <button className="btn btn-primary" onClick={handleCheck} disabled={completed}>
+          {completed ? '✓ Solved' : 'Check Solution'}
+        </button>
         <button className="btn" onClick={() => setShowHints(!showHints)}>
           {showHints ? 'Hide Hints' : 'Show Hints'}
         </button>
         <button className="btn" onClick={() => setShowSolution(!showSolution)}>
-          {showSolution ? 'Hide Solution' : 'Show Solution'}
+          {showSolution ? 'Hide Correct Code' : 'Show Correct Code'}
         </button>
-        {!completed && (
-          <button className="btn btn-primary" onClick={handleComplete}>
-            Mark as Completed ✓
-          </button>
-        )}
-        {completed && <span className="completed-badge">✓ Completed</span>}
       </div>
 
       {showHints && (
@@ -63,7 +77,7 @@ export function TaskView({ task, onComplete, completed: alreadyCompleted }: Task
 
       {showSolution && (
         <div className="solution">
-          <h4>Solution</h4>
+          <h4>Correct Code</h4>
           <CodeBlock code={task.solution} />
         </div>
       )}

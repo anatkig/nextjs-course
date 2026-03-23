@@ -76,7 +76,7 @@ export default async function Page() {
 \`\`\`
 
 > **Key takeaway:** Async Server Components unify data fetching and rendering into a single step. There's no separation between "fetch data" and "render UI" — the component does both, and the result is pre-rendered HTML sent to the client.`,
-      task: {
+      tasks: [{
         description: 'Create a Server Component that fetches a list of posts from a REST API (simulate with an async function). Display each post title and body. Use the no-cache fetch option to ensure fresh data on every request.',
         starterCode: `// app/posts/page.tsx
 
@@ -124,7 +124,7 @@ export default async function PostsPage() {
           'Use cache: "no-store" for SSR behavior',
           'Always handle the error case with res.ok',
         ],
-      },
+      }],
     },
     {
       id: 'mod3-t2',
@@ -232,7 +232,7 @@ app/
 \`\`\`
 
 > This means you can have a generic loading skeleton for most pages but a custom dashboard-specific skeleton for the dashboard section.`,
-      task: {
+      tasks: [{
         description: 'Create a loading.tsx skeleton UI with animated placeholders, and an error.tsx component that shows the error message with a retry button.',
         starterCode: `// app/dashboard/loading.tsx
 // TODO: Create a skeleton loading UI
@@ -287,7 +287,7 @@ export default function Error({
           'error.tsx MUST be a Client Component — add "use client"',
           'The error component receives error and reset props',
         ],
-      },
+      }],
     },
     {
       id: 'mod3-t3',
@@ -379,7 +379,7 @@ The outer Suspense resolves first (StatsPanel), then the inner one (RevenueChart
 - **SEO friendly** — the streamed content is still real HTML that search engines can index
 
 > **Pro tip:** Place your most critical content outside Suspense boundaries or in the fastest-resolving boundary. Put less critical or slower content in separate Suspense boundaries so it doesn't block the rest of the page.`,
-      task: {
+      tasks: [{
         description: 'Build a dashboard page with three async data sections wrapped in their own Suspense boundaries. Each section should have different loading skeletons and simulate different fetch times.',
         starterCode: `// app/dashboard/page.tsx
 import { Suspense } from 'react';
@@ -447,7 +447,7 @@ export default function DashboardPage() {
           'Wrap each section in its own Suspense boundary',
           'Suspense fallback shows while the async component is loading',
         ],
-      },
+      }],
     },
   ],
   test: [

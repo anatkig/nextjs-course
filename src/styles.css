@@ -352,6 +352,11 @@ a:hover { text-decoration: underline; }
 .solution { margin-top: 16px; }
 .solution h4 { margin-bottom: 8px; color: var(--success); }
 
+.task-feedback { margin-top: 12px; padding: 10px 16px; border-radius: var(--radius); font-weight: 500; }
+.task-feedback.correct { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+.task-feedback.incorrect { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+.task-view.task-solved { border-color: var(--success); background: rgba(16,185,129,0.03); }
+
 .quiz { margin: 16px 0; }
 .quiz h2 { margin-bottom: 8px; }
 .quiz-progress { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }

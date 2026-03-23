@@ -17,7 +17,7 @@ const initialProgress: UserProgress = {
 type Action =
   | { type: 'SET_LEVEL_TEST'; payload: TestResult }
   | { type: 'RESET_LEVEL_TEST' }
-  | { type: 'COMPLETE_TOPIC'; payload: { topicId: string } }
+  | { type: 'COMPLETE_TASK'; payload: { topicId: string; taskIndex: number; totalTasks: number } }
   | { type: 'SET_MODULE_TEST'; payload: { moduleId: string; result: TestResult } }
   | { type: 'SET_FINAL_TEST'; payload: TestResult }
   | { type: 'RECORD_RANDOM_QUESTION'; payload: { correct: boolean; streak: number } }
@@ -30,14 +30,22 @@ function progressReducer(state: UserProgress, action: Action): UserProgress {
       return { ...state, levelTestResult: action.payload };
     case 'RESET_LEVEL_TEST':
       return { ...state, levelTestResult: null };
-    case 'COMPLETE_TOPIC':
+    case 'COMPLETE_TASK': {
+      const prev = state.topicProgress[action.payload.topicId];
+      const tasksCompleted = prev?.tasksCompleted ? [...prev.tasksCompleted] : [];
+      tasksCompleted[action.payload.taskIndex] = true;
+      const allDone = tasksCompleted.filter(Boolean).length >= action.payload.totalTasks;
       return {
         ...state,
         topicProgress: {
           ...state.topicProgress,
-          [action.payload.topicId]: { completed: true, taskCompleted: true },
+          [action.payload.topicId]: {
+            completed: allDone,
+            tasksCompleted,
+          },
         },
       };
+    }
     case 'SET_MODULE_TEST':
       return {
         ...state,
